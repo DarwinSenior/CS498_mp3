@@ -52,15 +52,18 @@ function send(res, msg){
 		res.status(msg.status || 200).send({message: "success", data: msg.data});
 	}
 }
-function databaseCb(res, s_status, e_status){
+function databaseCb(res, s_status, e_status, criteria){
 	// msg for success and status for error code
 	s_status = s_status || 200;
 	e_status = e_status || 500;
+	criteria = criteria || function(){return true;}
 	return function(error, data){
 		if (error){
 			send(res, {status: e_status, error: error});
-		}else{
+		}else if(criteria(data)){
 			send(res, {status: s_status, data: data});
+		}else{
+			send(res, {status: 404, error: "No such id exists"});
 		}
 	}
 }
@@ -97,7 +100,7 @@ var useridRoute = router.route('/users/:id');
 function useridGET(req, res){
 	var id = req.params.id;
 	if (id){
-		User.findOne({_id: id}, databaseCb(res, 200, 500));
+		User.findOne({_id: id}, databaseCb(res, 200, 404, function(a){return !!a}));
 	}else{
 		send(res, {status: 400, error: "There is no such id"});
 	}
@@ -112,7 +115,7 @@ function useridDelete(req, res){
 	var id = req.params.id;
 	var query = req.query;
 	if (id){
-		User.find({_id: id}).remove().exec(databaseCb(res, 200, 404));
+		User.find({_id: id}).remove().exec(databaseCb(res, 200, 404, function(a){return a!=0;}));
 	}else{
 		send(res, {status: 400, error: "There is no such id"});
 	}
@@ -143,7 +146,7 @@ var taskidRout = router.route('/tasks/:id');
 function taskidGET(req, res){
 	var id = req.params.id;
 	if (id){
-		Task.findOne({_id: id}, databaseCb(res, 200, 500));
+		Task.findOne({_id: id}, databaseCb(res, 200, 500, function(a){return !!a}));
 	}else{
 		send(res, {status: 400, error: "There is no such id"});
 	}
@@ -159,7 +162,7 @@ function taskidDelete(req, res){
 	var id = req.params.id;
 	var query = req.query;
 	if (id){
-		Task.find({_id: id}).remove().exec(databaseCb(res, 200, 404));
+		Task.find({_id: id}).remove().exec(databaseCb(res, 200, 404, function(a){return a!=0;}));
 	}else{
 		send(res, {status: 400, error: "There is no such id"});
 	}
