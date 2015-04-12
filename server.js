@@ -108,7 +108,7 @@ function useridGET(req, res){
 function useridPUT(req, res){
 	var id = req.params.id;
 	var query = req.body;
-	$User.where({'_id': id}).update(query, databaseCb(res, 200, 404));
+	User.where({'_id': id}).update(query, databaseCb(res, 200, 404));
 }
 
 function useridDelete(req, res){
